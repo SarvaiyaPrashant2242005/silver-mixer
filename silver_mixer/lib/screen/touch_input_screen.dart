@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import '../controller/calculation_controller.dart';
 import '../services/language_service.dart';
+import '../services/storage_service.dart';
 import 'result_screen.dart';
 
 class TouchInputScreen extends StatefulWidget {
@@ -22,6 +24,8 @@ class _TouchInputScreenState extends State<TouchInputScreen> {
   late TextEditingController _meTouchController;
   late TextEditingController _coTouchController;
   late TextEditingController _gaTouchController;
+  final today = DateFormat('dd MMM yyyy').format(DateTime.now());
+  int _calculationNumber = 0;
 
   @override
   void initState() {
@@ -36,6 +40,7 @@ class _TouchInputScreenState extends State<TouchInputScreen> {
       text: widget.controller.gaTouch > 0 ? widget.controller.gaTouch.toString() : '',
     );
     _gaTouchController.text = _meTouchController.text;
+    _loadCalculationNumber();
     LanguageService.addListener(_onLanguageChanged);
   }
 
@@ -50,6 +55,20 @@ class _TouchInputScreenState extends State<TouchInputScreen> {
 
   void _onLanguageChanged() {
     setState(() {});
+  }
+
+  Future<void> _loadCalculationNumber() async {
+    final allCalculations = await StorageService.getAllCalculations();
+    setState(() {
+      if (widget.editId != null) {
+        // Find the index of the current calculation being edited
+        final index = allCalculations.indexWhere((calc) => calc.id == widget.editId);
+        _calculationNumber = index != -1 ? index + 1 : allCalculations.length + 1;
+      } else {
+        // For new calculation, it will be the next number
+        _calculationNumber = allCalculations.length + 1;
+      }
+    });
   }
 
   void _calculate() {
@@ -85,10 +104,53 @@ class _TouchInputScreenState extends State<TouchInputScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          '${LanguageService.appTitle} - ${LanguageService.currentLanguage == AppLanguage.english ? 'Step 2' : 'પગલું 2'}',
-        ),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      '${LanguageService.appTitle} - ${LanguageService.currentLanguage == AppLanguage.english ? 'Step 2' : 'પગલું 2'}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+             
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  today,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                if (_calculationNumber > 0)
+                  Text(
+                    '${LanguageService.calculation}: $_calculationNumber',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

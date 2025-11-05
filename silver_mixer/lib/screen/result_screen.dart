@@ -22,11 +22,15 @@ class ResultScreen extends StatefulWidget {
 class _ResultScreenState extends State<ResultScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  late final String today;
+  int _calculationNumber = 0;
 
   @override
   void initState() {
     super.initState();
+    today = DateFormat('dd MMM yyyy').format(DateTime.now());
     LanguageService.addListener(_onLanguageChanged);
+    _loadCalculationNumber();
   }
 
   @override
@@ -41,26 +45,38 @@ class _ResultScreenState extends State<ResultScreen> {
     setState(() {});
   }
 
+  Future<void> _loadCalculationNumber() async {
+    final allCalculations = await StorageService.getAllCalculations();
+    setState(() {
+      if (widget.editId != null) {
+        // Find the index of the current calculation being edited
+        final index = allCalculations.indexWhere((calc) => calc.id == widget.editId);
+        _calculationNumber = index != -1 ? index + 1 : allCalculations.length + 1;
+      } else {
+        // For new calculation, it will be the next number
+        _calculationNumber = allCalculations.length + 1;
+      }
+    });
+  }
+
   Future<bool> _isTitleUnique(String title) async {
     final allCalculations = await StorageService.getAllCalculations();
-    
+
     // If editing, allow same title for the same entry
     if (widget.editId != null) {
-      return !allCalculations.any((calc) => 
-        calc.title.toLowerCase() == title.toLowerCase() && 
-        calc.id != widget.editId
-      );
+      return !allCalculations.any((calc) =>
+          calc.title.toLowerCase() == title.toLowerCase() &&
+          calc.id != widget.editId);
     }
-    
+
     // For new entries, check if title exists
-    return !allCalculations.any((calc) => 
-      calc.title.toLowerCase() == title.toLowerCase()
-    );
+    return !allCalculations.any(
+        (calc) => calc.title.toLowerCase() == title.toLowerCase());
   }
 
   Future<void> _saveCalculation() async {
     final title = _titleController.text.trim();
-    
+
     // Check if title is empty
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,9 +165,9 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Widget _buildCalculationStep(
     String label,
-    String value,
-    {Color? labelColor}
-  ) {
+    String value, {
+    Color? labelColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -205,8 +221,47 @@ class _ResultScreenState extends State<ResultScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(LanguageService.calculation),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Text(
+                  LanguageService.calculation,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (_calculationNumber > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                   
+                    child: Text(
+                      '$_calculationNumber',
+                      style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            Text(
+              today,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600, // dull color
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -318,7 +373,8 @@ class _ResultScreenState extends State<ResultScreen> {
                         labelText: LanguageService.title,
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.title),
-                        helperText: LanguageService.currentLanguage == AppLanguage.english
+                        helperText: LanguageService.currentLanguage ==
+                                AppLanguage.english
                             ? 'Title must be unique'
                             : 'શીર્ષક અનન્ય હોવું આવશ્યક છે',
                         helperStyle: TextStyle(
@@ -349,7 +405,8 @@ class _ResultScreenState extends State<ResultScreen> {
                             onPressed: _resetCalculation,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
                               side: const BorderSide(color: Colors.red),
                             ),
                             child: Text(LanguageService.reset),
@@ -360,9 +417,11 @@ class _ResultScreenState extends State<ResultScreen> {
                           child: ElevatedButton(
                             onPressed: _saveCalculation,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: Text(LanguageService.save),
                           ),

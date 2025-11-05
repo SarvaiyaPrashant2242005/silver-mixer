@@ -49,7 +49,7 @@ class LanguageService {
       _currentLanguage == AppLanguage.english ? 'Silver Mixer' : 'સિલ્વર-મિક્સર';
 
   static String get calculation =>
-      _currentLanguage == AppLanguage.english ? 'Calculation' : 'ગાણણા નંબર';
+      _currentLanguage == AppLanguage.english ? 'Mixer Number' : 'ગયણા નંબર';
 
   static String get serialNumber =>
       _currentLanguage == AppLanguage.english ? 'Sr. No.' : 'ક્રમ';
