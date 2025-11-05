@@ -73,7 +73,7 @@ class LanguageService {
       _currentLanguage == AppLanguage.english ? 'Mixer Touch' : 'ગાઈણા ટચ';
 
   static String get kochCopper =>
-      _currentLanguage == AppLanguage.english ? 'Koch Copper' : 'કાચું કોપર';
+      _currentLanguage == AppLanguage.english ? 'raw copper' : 'કાચું કોપર';
 
   static String get silverFine =>
       _currentLanguage == AppLanguage.english ? 'Silver Fine' : 'ચાંદી ફાઈન';
