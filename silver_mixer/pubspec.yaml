@@ -1,0 +1,58 @@
+name: silver_mixer
+description: A professional silver mixing calculator application
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management & Storage
+  shared_preferences: ^2.2.2
+  
+  # Date & Time Formatting
+  intl: ^0.18.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.8
+
+  flutter_lints: ^3.0.0
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#2563EB"
+
+
+# Splash Screen Configuration
+flutter_native_splash:
+  color: "#2563EB"
+  image: assets/splash/splash_icon.png
+  color_dark: "#1E40AF"
+  image_dark: assets/splash/splash_icon.png
+  android_12:
+    image: assets/splash/splash_icon.png
+    icon_background_color: "#2563EB"
+  android: true
+  ios: true
+  web: false
+
+flutter:
+  uses-material-design: true
+  assets:
+      - assets/icons/
+  # If you have assets, uncomment and add them here
+  # assets:
+  #   - assets/icon/
+  #   - assets/splash/
