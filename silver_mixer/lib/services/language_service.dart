@@ -64,13 +64,13 @@ class LanguageService {
       _currentLanguage == AppLanguage.english ? 'Fine' : 'ફાઈન';
 
   static String get meTouch =>
-      _currentLanguage == AppLanguage.english ? 'Me. Touch' : 'મે.ટચ';
+      _currentLanguage == AppLanguage.english ? 'Get Touch' : 'મે.ટચ';
 
   static String get coTouch =>
-      _currentLanguage == AppLanguage.english ? 'Co. Touch' : 'કો.ટચ';
+      _currentLanguage == AppLanguage.english ? 'Copper Touch' : 'કોપર ટચ';
 
   static String get gaTouch =>
-      _currentLanguage == AppLanguage.english ? 'Ga. Touch' : 'ગા.ટચ';
+      _currentLanguage == AppLanguage.english ? 'Mixer Touch' : 'ગાઈણા ટચ';
 
   static String get kochCopper =>
       _currentLanguage == AppLanguage.english ? 'Koch Copper' : 'કાચું કોપર';
@@ -79,13 +79,13 @@ class LanguageService {
       _currentLanguage == AppLanguage.english ? 'Silver Fine' : 'ચાંદી ફાઈન';
 
   static String get gaalvaNear =>
-      _currentLanguage == AppLanguage.english ? 'Gaalva Number Near' : 'ગાળવા નંબર નજીક';
+      _currentLanguage == AppLanguage.english ? 'Mixer net weight' : 'ગાઈણા નેટ વજન';
 
   static String get gaTopna =>
-      _currentLanguage == AppLanguage.english ? 'Ga. Topna' : 'ગા.ટોટલ';
+      _currentLanguage == AppLanguage.english ? 'Mixer Total' : 'ગાઈણા ટોટલ';
 
   static String get numberCopper =>
-      _currentLanguage == AppLanguage.english ? 'Number Copper' : 'નંબર કોપર';
+      _currentLanguage == AppLanguage.english ? 'Net Copper' : 'નેટ કોપર';
 
   static String get title =>
       _currentLanguage == AppLanguage.english ? 'Title' : 'શીર્ષક';

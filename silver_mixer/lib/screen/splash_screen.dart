@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:silver_mixer/screen/homeScreen.dart';
 import 'dart:async';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -73,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 2),
-              
+
               // App Icon with animation
               AnimatedBuilder(
                 animation: _controller,
@@ -162,10 +161,7 @@ class _SplashScreenState extends State<SplashScreen>
                   children: [
                     const Text(
                       'Developed by',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white60,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.white60),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -209,7 +205,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ],
                 ),
               ),
-
               const SizedBox(height: 50),
             ],
           ),

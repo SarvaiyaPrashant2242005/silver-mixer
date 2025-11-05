@@ -17,7 +17,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<SavedCalculation> _calculations = [];
   List<SavedCalculation> _filteredCalculations = [];
   bool _isLoading = true;
-  
+
   // Search and filter controllers
   final TextEditingController _searchController = TextEditingController();
   DateTimeRange? _selectedDateRange;
@@ -58,15 +58,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
       _filteredCalculations = _calculations.where((calc) {
         // Search filter
         final searchQuery = _searchController.text.toLowerCase();
-        final matchesSearch = searchQuery.isEmpty ||
+        final matchesSearch =
+            searchQuery.isEmpty ||
             calc.title.toLowerCase().contains(searchQuery) ||
             calc.description.toLowerCase().contains(searchQuery) ||
             calc.id.toString().contains(searchQuery);
 
         // Date range filter
-        final matchesDate = _selectedDateRange == null ||
-            (calc.date.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
-                calc.date.isBefore(_selectedDateRange!.end.add(const Duration(days: 1))));
+        final matchesDate =
+            _selectedDateRange == null ||
+            (calc.date.isAfter(
+                  _selectedDateRange!.start.subtract(const Duration(days: 1)),
+                ) &&
+                calc.date.isBefore(
+                  _selectedDateRange!.end.add(const Duration(days: 1)),
+                ));
 
         return matchesSearch && matchesDate;
       }).toList();
@@ -144,14 +150,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void _editCalculation(SavedCalculation calculation) {
     final controller = CalculationController();
     controller.loadCalculation(calculation);
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EntryInputScreen(
-          controller: controller,
-          editId: calculation.id,
-        ),
+        builder: (context) =>
+            EntryInputScreen(controller: controller, editId: calculation.id),
       ),
     ).then((_) => _loadCalculations());
   }
@@ -175,10 +179,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         actions: [
           if (_isSearching)
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: _clearSearch,
-            )
+            IconButton(icon: const Icon(Icons.close), onPressed: _clearSearch)
           else
             IconButton(
               icon: const Icon(Icons.search),
@@ -239,10 +240,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   Text(
                     '${_filteredCalculations.length} results',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -253,182 +251,191 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredCalculations.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _calculations.isEmpty
-                                  ? Icons.history
-                                  : Icons.search_off,
-                              size: 80,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _calculations.isEmpty
-                                  ? LanguageService.noHistory
-                                  : 'No results found',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            if (_calculations.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              TextButton(
-                                onPressed: () {
-                                  _clearSearch();
-                                  _clearDateFilter();
-                                },
-                                child: const Text('Clear filters'),
-                              ),
-                            ],
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _calculations.isEmpty
+                              ? Icons.history
+                              : Icons.search_off,
+                          size: 80,
+                          color: Colors.grey.shade400,
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadCalculations,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredCalculations.length,
-                          itemBuilder: (context, index) {
-                            final calculation = _filteredCalculations[index];
-                            return Card(
-                              elevation: 3,
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: InkWell(
-                                onTap: () => _editCalculation(calculation),
-                                borderRadius: BorderRadius.circular(12),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 16),
+                        Text(
+                          _calculations.isEmpty
+                              ? LanguageService.noHistory
+                              : 'No results found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        if (_calculations.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () {
+                              _clearSearch();
+                              _clearDateFilter();
+                            },
+                            child: const Text('Clear filters'),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadCalculations,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredCalculations.length,
+                      itemBuilder: (context, index) {
+                        final calculation = _filteredCalculations[index];
+                        return Card(
+                          elevation: 3,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: InkWell(
+                            onTap: () => _editCalculation(calculation),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
                                     children: [
-                                      Row(
-                                        children: [
-                                          // Serial number badge
-                                         // Serial number badge
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                                  .withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              '#${index + 1}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context).colorScheme.primary,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              calculation.title,
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.edit, size: 20),
-                                            onPressed: () =>
-                                                _editCalculation(calculation),
-                                            color:
-                                                Theme.of(context).colorScheme.primary,
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete, size: 20),
-                                            onPressed: () =>
-                                                _deleteCalculation(calculation.id),
-                                            color: Colors.red,
-                                          ),
-                                        ],
-                                      ),
-                                      
-                                      if (calculation.description.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          calculation.description,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                      ],
-
-                                      const SizedBox(height: 12),
-
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.calendar_today,
-                                            size: 14,
-                                            color: Colors.grey.shade600,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            DateFormat('dd MMM yyyy, hh:mm a')
-                                                .format(calculation.date),
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-
-                                      const SizedBox(height: 12),
-                                      
+                                      // Serial number badge
+                                      // Serial number badge
                                       Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue.shade50,
-                                          borderRadius: BorderRadius.circular(8),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
                                         ),
-                                        child: Column(
-                                          children: [
-                                            _buildResultRow(
-                                              LanguageService.kochCopper,
-                                              calculation.result.step2
-                                                  .toStringAsFixed(0),
-                                              Colors.green.shade700,
-                                            ),
-                                            const Divider(height: 16),
-                                            _buildResultRow(
-                                              LanguageService.gaalvaNear,
-                                              calculation.result.step5
-                                                  .toStringAsFixed(0),
-                                              Colors.purple.shade700,
-                                            ),
-                                            const Divider(height: 16),
-                                            _buildResultRow(
-                                              LanguageService.numberCopper,
-                                              calculation.result.step6
-                                                  .toStringAsFixed(0),
-                                              Colors.red.shade700,
-                                            ),
-                                          ],
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '#${index + 1}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          calculation.title,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, size: 20),
+                                        onPressed: () =>
+                                            _editCalculation(calculation),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          size: 20,
+                                        ),
+                                        onPressed: () =>
+                                            _deleteCalculation(calculation.id),
+                                        color: Colors.red,
+                                      ),
+                                    ],
+                                  ),
+
+                                  if (calculation.description.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      calculation.description,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+
+                                  const SizedBox(height: 12),
+
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        size: 14,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        DateFormat(
+                                          'dd MMM yyyy, hh:mm a',
+                                        ).format(calculation.date),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
+
+                                  const SizedBox(height: 12),
+
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _buildResultRow(
+                                          LanguageService.kochCopper,
+                                          calculation.result.step2
+                                              .toStringAsFixed(0),
+                                          Colors.green.shade700,
+                                        ),
+                                        const Divider(height: 16),
+                                        _buildResultRow(
+                                          LanguageService.gaalvaNear,
+                                          calculation.result.step5
+                                              .toStringAsFixed(0),
+                                          Colors.purple.shade700,
+                                        ),
+                                        const Divider(height: 16),
+                                        _buildResultRow(
+                                          LanguageService.numberCopper,
+                                          calculation.result.step6
+                                              .toStringAsFixed(0),
+                                          Colors.red.shade700,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
-                      ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

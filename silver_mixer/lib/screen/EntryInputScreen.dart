@@ -9,12 +9,9 @@ import 'touch_input_screen.dart';
 class EntryInputScreen extends StatefulWidget {
   final CalculationController controller;
   final String? editId;
-  
-  const EntryInputScreen({
-    Key? key,
-    required this.controller,
-    this.editId,
-  }) : super(key: key);
+
+  const EntryInputScreen({Key? key, required this.controller, this.editId})
+    : super(key: key);
 
   @override
   State<EntryInputScreen> createState() => _EntryInputScreenState();
@@ -48,11 +45,13 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
     final allCalculations = await StorageService.getAllCalculations();
     setState(() {
       if (widget.editId != null) {
-        // Find the index of the current calculation being edited
-        final index = allCalculations.indexWhere((calc) => calc.id == widget.editId);
-        _calculationNumber = index != -1 ? index + 1 : allCalculations.length + 1;
+        final index = allCalculations.indexWhere(
+          (calc) => calc.id == widget.editId,
+        );
+        _calculationNumber = index != -1
+            ? index + 1
+            : allCalculations.length + 1;
       } else {
-        // For new calculation, it will be the next number
         _calculationNumber = allCalculations.length + 1;
       }
     });
@@ -62,9 +61,15 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
     for (int i = 0; i < widget.controller.entries.length; i++) {
       final entry = widget.controller.entries[i];
       _controllers.add([
-        TextEditingController(text: entry.weight > 0 ? entry.weight.toString() : ''),
-        TextEditingController(text: entry.touch > 0 ? entry.touch.toString() : ''),
-        TextEditingController(text: entry.fine > 0 ? entry.fine.toString() : ''),
+        TextEditingController(
+          text: entry.weight > 0 ? entry.weight.toString() : '',
+        ),
+        TextEditingController(
+          text: entry.touch > 0 ? entry.touch.toString() : '',
+        ),
+        TextEditingController(
+          text: entry.fine > 0 ? entry.fine.toString() : '',
+        ),
       ]);
     }
   }
@@ -89,8 +94,8 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
 
   bool _hasEntryData(int index) {
     return _controllers[index][0].text.isNotEmpty ||
-           _controllers[index][1].text.isNotEmpty ||
-           _controllers[index][2].text.isNotEmpty;
+        _controllers[index][1].text.isNotEmpty ||
+        _controllers[index][2].text.isNotEmpty;
   }
 
   Future<void> _removeEntry(int index) async {
@@ -98,7 +103,6 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
       return;
     }
 
-    // Check if entry has data
     if (_hasEntryData(index)) {
       final bool? confirm = await showDialog<bool>(
         context: context,
@@ -125,9 +129,7 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red,
-                ),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
                 child: Text(
                   LanguageService.currentLanguage == AppLanguage.english
                       ? 'Delete'
@@ -139,13 +141,11 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
         },
       );
 
-      // If user cancelled or closed the dialog
       if (confirm != true) {
         return;
       }
     }
 
-    // Proceed with deletion
     widget.controller.removeEntry(index);
     for (var controller in _controllers[index]) {
       controller.dispose();
@@ -157,7 +157,7 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
   void _calculateAndUpdateFine(int index) {
     final weight = double.tryParse(_controllers[index][0].text) ?? 0;
     final touch = double.tryParse(_controllers[index][1].text) ?? 0;
-    
+
     if (weight > 0 && touch > 0) {
       final fine = (weight * touch) / 100;
       _controllers[index][2].text = fine.toStringAsFixed(2);
@@ -190,7 +190,6 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
   }
 
   void _proceedToNext() {
-    // Update all entries
     for (int i = 0; i < _controllers.length; i++) {
       _updateEntry(i);
     }
@@ -238,7 +237,6 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                 
                 ],
               ),
             ),
@@ -249,10 +247,7 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
               children: [
                 Text(
                   today,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
                 if (_calculationNumber > 0)
                   Text(
@@ -274,7 +269,9 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withOpacity(0.5),
               border: Border(
                 bottom: BorderSide(
                   color: Theme.of(context).colorScheme.primary,
@@ -284,10 +281,13 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
             ),
             child: Row(
               children: [
-                Expanded(
-                  flex: 1,
+                // Serial Number column (50px)
+                SizedBox(
+                  width: 50,
                   child: Text(
-                    LanguageService.currentLanguage == AppLanguage.english ? 'Total' : 'કુલ',
+                    LanguageService.currentLanguage == AppLanguage.english
+                        ? 'Total'
+                        : 'કુલ',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -296,8 +296,9 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+                const SizedBox(width: 4),
+                // Weight column
                 Expanded(
-                  flex: 2,
                   child: Column(
                     children: [
                       Text(
@@ -321,12 +322,12 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 4),
+                // Touch column (empty for total)
+                Expanded(child: const SizedBox()),
+                const SizedBox(width: 4),
+                // Fine column
                 Expanded(
-                  flex: 2,
-                  child: const SizedBox(),
-                ),
-                Expanded(
-                  flex: 2,
                   child: Column(
                     children: [
                       Text(
@@ -350,49 +351,57 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 40),
+                const SizedBox(width: 4),
+                const SizedBox(width: 40), // Space for delete button
               ],
             ),
           ),
-          // Header Row (below total)
+          // Header Row
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withOpacity(0.3),
             child: Row(
               children: [
-                Expanded(
-                  flex: 1,
+                // Serial Number header (50px)
+                SizedBox(
+                  width: 50,
                   child: Text(
                     LanguageService.serialNumber,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                 ),
+                const SizedBox(width: 4),
+                // Weight header
                 Expanded(
-                  flex: 2,
                   child: Text(
                     LanguageService.weight,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                 ),
+                const SizedBox(width: 4),
+                // Touch header
                 Expanded(
-                  flex: 2,
                   child: Text(
                     LanguageService.touch,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                 ),
+                const SizedBox(width: 4),
+                // Fine header
                 Expanded(
-                  flex: 2,
                   child: Text(
                     LanguageService.fine,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(width: 40),
+                const SizedBox(width: 4),
+                const SizedBox(width: 40), // Space for delete button
               ],
             ),
           ),
@@ -409,8 +418,9 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        Expanded(
-                          flex: 1,
+                        // Serial Number (50px)
+                        SizedBox(
+                          width: 50,
                           child: Text(
                             '${index + 1}',
                             style: const TextStyle(
@@ -420,62 +430,84 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
                             textAlign: TextAlign.center,
                           ),
                         ),
+                        const SizedBox(width: 4),
+                        // Weight input
                         Expanded(
-                          flex: 2,
                           child: TextField(
                             controller: _controllers[index][0],
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
+                              ),
                             ],
                             decoration: InputDecoration(
                               hintText: LanguageService.enterValue,
                               border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
                             ),
                             textAlign: TextAlign.center,
                             onChanged: (_) {
                               _calculateAndUpdateFine(index);
                               _updateEntry(index);
-                              setState(() {}); // Real-time update
+                              setState(() {});
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 4),
+                        // Touch input
                         Expanded(
-                          flex: 2,
                           child: TextField(
                             controller: _controllers[index][1],
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
+                              ),
                             ],
                             decoration: InputDecoration(
                               hintText: LanguageService.enterValue,
                               border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
                             ),
                             textAlign: TextAlign.center,
                             onChanged: (_) {
                               _calculateAndUpdateFine(index);
                               _updateEntry(index);
-                              setState(() {}); // Real-time update
+                              setState(() {});
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 4),
+                        // Fine input (disabled)
                         Expanded(
-                          flex: 2,
                           child: TextField(
                             controller: _controllers[index][2],
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
+                              ),
                             ],
                             decoration: InputDecoration(
                               hintText: LanguageService.enterValue,
                               border: const OutlineInputBorder(),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 8,
+                              ),
                               filled: true,
                               fillColor: Colors.grey.shade200,
                             ),
@@ -483,14 +515,18 @@ class _EntryInputScreenState extends State<EntryInputScreen> {
                             enabled: false,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 4),
+                        // Delete button (40px)
                         if (_controllers.length > 1)
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _removeEntry(index),
+                          SizedBox(
+                            width: 40,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _removeEntry(index),
+                              padding: EdgeInsets.zero,
+                            ),
                           )
-                        else
-                          const SizedBox(width: 40),
+                        
                       ],
                     ),
                   ),

@@ -79,9 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const HistoryScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const HistoryScreen()),
               );
             },
           ),
@@ -153,9 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   LanguageService.appTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF757575),
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF757575),
+                  ),
                 ),
 
                 const SizedBox(height: 8),
@@ -199,9 +197,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EntryInputScreen(
-                          controller: controller,
-                        ),
+                        builder: (context) =>
+                            EntryInputScreen(controller: controller),
                       ),
                     );
                   },
