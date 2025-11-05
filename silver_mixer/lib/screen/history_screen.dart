@@ -6,7 +6,6 @@ import '../model/calculation_model.dart';
 import '../services/language_service.dart';
 import '../services/storage_service.dart';
 
-
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
 
@@ -16,18 +15,26 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   List<SavedCalculation> _calculations = [];
+  List<SavedCalculation> _filteredCalculations = [];
   bool _isLoading = true;
+  
+  // Search and filter controllers
+  final TextEditingController _searchController = TextEditingController();
+  DateTimeRange? _selectedDateRange;
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _loadCalculations();
     LanguageService.addListener(_onLanguageChanged);
+    _searchController.addListener(_filterCalculations);
   }
 
   @override
   void dispose() {
     LanguageService.removeListener(_onLanguageChanged);
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -40,7 +47,69 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final calculations = await StorageService.getAllCalculations();
     setState(() {
       _calculations = calculations;
+      _filteredCalculations = calculations;
       _isLoading = false;
+    });
+    _filterCalculations();
+  }
+
+  void _filterCalculations() {
+    setState(() {
+      _filteredCalculations = _calculations.where((calc) {
+        // Search filter
+        final searchQuery = _searchController.text.toLowerCase();
+        final matchesSearch = searchQuery.isEmpty ||
+            calc.title.toLowerCase().contains(searchQuery) ||
+            calc.description.toLowerCase().contains(searchQuery) ||
+            calc.id.toString().contains(searchQuery);
+
+        // Date range filter
+        final matchesDate = _selectedDateRange == null ||
+            (calc.date.isAfter(_selectedDateRange!.start.subtract(const Duration(days: 1))) &&
+                calc.date.isBefore(_selectedDateRange!.end.add(const Duration(days: 1))));
+
+        return matchesSearch && matchesDate;
+      }).toList();
+    });
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: _selectedDateRange,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDateRange = picked;
+      });
+      _filterCalculations();
+    }
+  }
+
+  void _clearDateFilter() {
+    setState(() {
+      _selectedDateRange = null;
+    });
+    _filterCalculations();
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _isSearching = false;
     });
   }
 
@@ -91,143 +160,278 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(LanguageService.history),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Search by name or number...',
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  border: InputBorder.none,
+                ),
+              )
+            : Text(LanguageService.history),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        actions: [
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _clearSearch,
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                setState(() {
+                  _isSearching = true;
+                });
+              },
+            ),
+          IconButton(
+            icon: Icon(
+              _selectedDateRange != null
+                  ? Icons.filter_alt
+                  : Icons.filter_alt_outlined,
+            ),
+            onPressed: _selectDateRange,
+          ),
+        ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _calculations.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.history,
-                        size: 80,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        LanguageService.noHistory,
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
+      body: Column(
+        children: [
+          // Active filters display
+          if (_selectedDateRange != null || _searchController.text.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.blue.shade50,
+              child: Row(
+                children: [
+                  const Icon(Icons.filter_list, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        if (_selectedDateRange != null)
+                          Chip(
+                            label: Text(
+                              '${DateFormat('dd/MM/yy').format(_selectedDateRange!.start)} - ${DateFormat('dd/MM/yy').format(_selectedDateRange!.end)}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: _clearDateFilter,
+                            backgroundColor: Colors.blue.shade100,
+                          ),
+                        if (_searchController.text.isNotEmpty)
+                          Chip(
+                            label: Text(
+                              'Search: ${_searchController.text}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: _clearSearch,
+                            backgroundColor: Colors.green.shade100,
+                          ),
+                      ],
+                    ),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadCalculations,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _calculations.length,
-                    itemBuilder: (context, index) {
-                      final calculation = _calculations[index];
-                      return Card(
-                        elevation: 3,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
-                          onTap: () => _editCalculation(calculation),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        calculation.title,
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, size: 20),
-                                      onPressed: () => _editCalculation(calculation),
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete, size: 20),
-                                      onPressed: () => _deleteCalculation(calculation.id),
-                                      color: Colors.red,
-                                    ),
-                                  ],
-                                ),
-                                
-                                if (calculation.description.isNotEmpty) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    calculation.description,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ],
+                  Text(
+                    '${_filteredCalculations.length} results',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                                const SizedBox(height: 12),
-
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.calendar_today,
-                                      size: 14,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      DateFormat('dd MMM yyyy, hh:mm a').format(calculation.date),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 12),
-                                
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+          // Main content
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredCalculations.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _calculations.isEmpty
+                                  ? Icons.history
+                                  : Icons.search_off,
+                              size: 80,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _calculations.isEmpty
+                                  ? LanguageService.noHistory
+                                  : 'No results found',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            if (_calculations.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              TextButton(
+                                onPressed: () {
+                                  _clearSearch();
+                                  _clearDateFilter();
+                                },
+                                child: const Text('Clear filters'),
+                              ),
+                            ],
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadCalculations,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filteredCalculations.length,
+                          itemBuilder: (context, index) {
+                            final calculation = _filteredCalculations[index];
+                            return Card(
+                              elevation: 3,
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: InkWell(
+                                onTap: () => _editCalculation(calculation),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
                                   child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      _buildResultRow(
-                                        LanguageService.kochCopper,
-                                        calculation.result.step2.toStringAsFixed(0),
-                                        Colors.green.shade700,
+                                      Row(
+                                        children: [
+                                          // Serial number badge
+                                         // Serial number badge
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              '#${index + 1}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Theme.of(context).colorScheme.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              calculation.title,
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, size: 20),
+                                            onPressed: () =>
+                                                _editCalculation(calculation),
+                                            color:
+                                                Theme.of(context).colorScheme.primary,
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, size: 20),
+                                            onPressed: () =>
+                                                _deleteCalculation(calculation.id),
+                                            color: Colors.red,
+                                          ),
+                                        ],
                                       ),
-                                      const Divider(height: 16),
-                                      _buildResultRow(
-                                        LanguageService.gaalvaNear,
-                                        calculation.result.step5.toStringAsFixed(0),
-                                        Colors.purple.shade700,
+                                      
+                                      if (calculation.description.isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          calculation.description,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                      ],
+
+                                      const SizedBox(height: 12),
+
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today,
+                                            size: 14,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            DateFormat('dd MMM yyyy, hh:mm a')
+                                                .format(calculation.date),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const Divider(height: 16),
-                                      _buildResultRow(
-                                        LanguageService.numberCopper,
-                                        calculation.result.step6.toStringAsFixed(0),
-                                        Colors.red.shade700,
+
+                                      const SizedBox(height: 12),
+                                      
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            _buildResultRow(
+                                              LanguageService.kochCopper,
+                                              calculation.result.step2
+                                                  .toStringAsFixed(0),
+                                              Colors.green.shade700,
+                                            ),
+                                            const Divider(height: 16),
+                                            _buildResultRow(
+                                              LanguageService.gaalvaNear,
+                                              calculation.result.step5
+                                                  .toStringAsFixed(0),
+                                              Colors.purple.shade700,
+                                            ),
+                                            const Divider(height: 16),
+                                            _buildResultRow(
+                                              LanguageService.numberCopper,
+                                              calculation.result.step6
+                                                  .toStringAsFixed(0),
+                                              Colors.red.shade700,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+          ),
+        ],
+      ),
     );
   }
 
