@@ -152,50 +152,65 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
 
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
 
-              // Developed by
+              // Developed by - Enhanced visibility
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Column(
                   children: [
                     const Text(
                       'Developed by',
-                      style: TextStyle(fontSize: 12, color: Colors.white60),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
+                        horizontal: 24,
+                        vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
-                        ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              'assets/icons/company_logo.png',
-                              width: 24,
-                              height: 24,
-                              fit: BoxFit.contain,
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                'assets/icons/company_logo.png',
+                                width: 28,
+                                height: 28,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          const Text(
+                          const SizedBox(width: 12),
+                          Text(
                             'AllySoft Solutions',
                             style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
                               letterSpacing: 0.5,
                             ),
                           ),
