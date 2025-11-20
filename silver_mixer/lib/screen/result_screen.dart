@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
+import 'package:silver_mixer/helper/ad_helper.dart';
 import 'package:silver_mixer/screen/history_screen.dart';
 import '../controller/calculation_controller.dart';
 import '../model/calculation_model.dart';
@@ -22,6 +24,8 @@ class _ResultScreenState extends State<ResultScreen> {
   final _descriptionController = TextEditingController();
   late final String today;
   int _calculationNumber = 0;
+  InterstitialAd? _interstitialAd;
+  bool _isInterstitialAdLoaded = false;
 
   @override
   void initState() {
@@ -29,6 +33,7 @@ class _ResultScreenState extends State<ResultScreen> {
     today = DateFormat('dd MMM yyyy').format(DateTime.now());
     LanguageService.addListener(_onLanguageChanged);
     _loadCalculationNumber();
+    _loadInterstitialAd();
   }
 
   @override
@@ -36,6 +41,7 @@ class _ResultScreenState extends State<ResultScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     LanguageService.removeListener(_onLanguageChanged);
+    _interstitialAd?.dispose();
     super.dispose();
   }
 
@@ -79,6 +85,59 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: AdHelper.getIntertitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          print('✓ Interstitial ad loaded successfully');
+          _interstitialAd = ad;
+          setState(() {
+            _isInterstitialAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('✗ Interstitial ad failed to load: ${error.message}');
+          print('Error code: ${error.code}');
+          setState(() {
+            _isInterstitialAdLoaded = false;
+          });
+        },
+      ),
+    );
+  }
+
+  Future<void> _showInterstitialAd() async {
+    if (_isInterstitialAdLoaded && _interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdShowedFullScreenContent: (InterstitialAd ad) {
+          print('Ad showed full screen content.');
+        },
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          print('Ad dismissed full screen content.');
+          ad.dispose();
+          // Load a new ad after the previous one is dismissed
+          _loadInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          print('Ad failed to show full screen content. Error: ${error.message}');
+          ad.dispose();
+          // Load a new ad if the previous one failed to show
+          _loadInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+      setState(() {
+        _isInterstitialAdLoaded = false;
+      });
+    } else {
+      print('Interstitial ad not loaded yet');
+      // Load ad if not already loaded
+      _loadInterstitialAd();
+    }
+  }
+
   Future<void> _saveCalculation() async {
     final title = _titleController.text.trim();
 
@@ -110,7 +169,7 @@ class _ResultScreenState extends State<ResultScreen> {
       return;
     }
 
-    // NEW: Check if limit of 10 calculations reached (only for new calculations)
+    // Check if limit of 10 calculations reached (only for new calculations)
     if (widget.editId == null) {
       final allCalculations = await StorageService.getAllCalculations();
       if (allCalculations.length >= 10) {
@@ -133,7 +192,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   MaterialPageRoute(
                     builder: (context) => const HistoryScreen(),
                   ),
-                  (route) => false, // Removes all previous routes
+                  (route) => false,
                 );
               },
             ),
@@ -142,6 +201,9 @@ class _ResultScreenState extends State<ResultScreen> {
         return;
       }
     }
+
+    // Show interstitial ad before saving
+    await _showInterstitialAd();
 
     final calculation = SavedCalculation(
       id: widget.editId ?? DateTime.now().millisecondsSinceEpoch.toString(),
